@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-redis/redis/v9"
+	"github.com/redis/go-redis/v9"
 )
 
 // QACacheData 问答缓存数据
@@ -25,11 +25,11 @@ type RedisRepo struct {
 // NewRedisRepo 创建 Redis 数据访问层
 func NewRedisRepo(cfg config.RedisConfig) *RedisRepo {
 	client := redis.NewClient(&redis.Options{
-		Addr:        cfg.Address(),
-		Password:    cfg.Password,
-		DB:          cfg.DB,
-		PoolSize:    cfg.PoolSize,
-		IdleTimeout: cfg.IdleTimeout,
+		Addr:            cfg.Address(),
+		Password:        cfg.Password,
+		DB:              cfg.DB,
+		PoolSize:        cfg.PoolSize,
+		ConnMaxIdleTime: cfg.IdleTimeout,
 	})
 
 	return &RedisRepo{client: client}
