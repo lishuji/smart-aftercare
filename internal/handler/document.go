@@ -31,8 +31,19 @@ type UploadDocumentRequest struct {
 }
 
 // UploadDocument 文档上传接口
-// POST /api/document/upload
-// FormData: file=说明书.pdf&brand=美的&model=KFR-35GW&uploader=admin
+// @Summary      上传文档
+// @Description  上传家电说明书文档（PDF/DOC/DOCX/TXT），系统将异步解析、切片、向量化入库
+// @Tags         文档管理
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file      formData  file    true   "上传的文件（支持 PDF/DOC/DOCX/TXT，最大 50MB）"
+// @Param        brand     formData  string  true   "品牌名称"
+// @Param        model     formData  string  true   "型号"
+// @Param        uploader  formData  string  false  "上传人"
+// @Success      200  {object}  handler.UploadDocumentResponse  "上传成功"
+// @Failure      400  {object}  handler.ErrorResponse           "参数错误"
+// @Failure      500  {object}  handler.ErrorResponse           "服务器内部错误"
+// @Router       /document/upload [post]
 func (h *DocumentHandler) UploadDocument(c *gin.Context) {
 	// 1. 解析表单参数
 	var req UploadDocumentRequest
@@ -116,7 +127,15 @@ func (h *DocumentHandler) UploadDocument(c *gin.Context) {
 }
 
 // GetDocument 获取文档详情
-// GET /api/document/:id
+// @Summary      获取文档详情
+// @Description  根据文档 ID 获取文档详细信息
+// @Tags         文档管理
+// @Produce      json
+// @Param        id   path      int  true  "文档 ID"
+// @Success      200  {object}  handler.DocumentDataResponse  "文档详情"
+// @Failure      400  {object}  handler.ErrorResponse         "无效的文档ID"
+// @Failure      404  {object}  handler.ErrorResponse         "文档不存在"
+// @Router       /document/{id} [get]
 func (h *DocumentHandler) GetDocument(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -144,7 +163,17 @@ func (h *DocumentHandler) GetDocument(c *gin.Context) {
 }
 
 // ListDocuments 文档列表
-// GET /api/documents?brand=美的&model=KFR-35GW&page=1&page_size=10
+// @Summary      文档列表
+// @Description  分页查询文档列表，支持按品牌、型号筛选
+// @Tags         文档管理
+// @Produce      json
+// @Param        brand      query     string  false  "品牌名称"
+// @Param        model      query     string  false  "型号"
+// @Param        page       query     int     false  "页码（默认 1）"
+// @Param        page_size  query     int     false  "每页条数（默认 10，最大 100）"
+// @Success      200  {object}  handler.DocumentListResponse  "文档列表"
+// @Failure      500  {object}  handler.ErrorResponse         "查询失败"
+// @Router       /documents [get]
 func (h *DocumentHandler) ListDocuments(c *gin.Context) {
 	brand := c.Query("brand")
 	modelName := c.Query("model")
@@ -179,7 +208,15 @@ func (h *DocumentHandler) ListDocuments(c *gin.Context) {
 }
 
 // DeleteDocument 删除文档
-// DELETE /api/document/:id
+// @Summary      删除文档
+// @Description  根据文档 ID 删除文档及其关联的向量数据
+// @Tags         文档管理
+// @Produce      json
+// @Param        id   path      int  true  "文档 ID"
+// @Success      200  {object}  handler.MessageResponse  "删除成功"
+// @Failure      400  {object}  handler.ErrorResponse    "无效的文档ID"
+// @Failure      500  {object}  handler.ErrorResponse    "删除失败"
+// @Router       /document/{id} [delete]
 func (h *DocumentHandler) DeleteDocument(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)

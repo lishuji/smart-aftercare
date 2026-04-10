@@ -1,0 +1,484 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "智能售后服务系统 API",
+    "description": "基于 RAG 的智能家电售后问答与文档管理系统。支持文档上传解析、智能问答、故障代码查询等功能。",
+    "contact": {
+      "name": "Smart Aftercare Team",
+      "email": "support@smart-aftercare.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0"
+  },
+  "host": "localhost:8000",
+  "basePath": "/api",
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "健康检查",
+        "description": "返回服务基础健康状态",
+        "tags": ["系统监控"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "服务健康",
+            "schema": {
+              "$ref": "#/definitions/HealthResponse"
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "就绪检查",
+        "description": "检查所有依赖服务（MySQL、Redis、Milvus）的连接状态",
+        "tags": ["系统监控"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "所有服务就绪",
+            "schema": {
+              "$ref": "#/definitions/ReadinessResponse"
+            }
+          },
+          "503": {
+            "description": "部分服务不可用",
+            "schema": {
+              "$ref": "#/definitions/ReadinessResponse"
+            }
+          }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "系统统计",
+        "description": "获取文档数量、查询次数等系统统计信息",
+        "tags": ["系统监控"],
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "统计信息",
+            "schema": {
+              "$ref": "#/definitions/StatsResponse"
+            }
+          },
+          "500": {
+            "description": "获取统计信息失败",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/document/upload": {
+      "post": {
+        "summary": "上传文档",
+        "description": "上传家电说明书文档（PDF/DOC/DOCX/TXT），系统将异步解析、切片、向量化入库",
+        "tags": ["文档管理"],
+        "consumes": ["multipart/form-data"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "file",
+            "in": "formData",
+            "type": "file",
+            "required": true,
+            "description": "上传的文件（支持 PDF/DOC/DOCX/TXT，最大 50MB）"
+          },
+          {
+            "name": "brand",
+            "in": "formData",
+            "type": "string",
+            "required": true,
+            "description": "品牌名称"
+          },
+          {
+            "name": "model",
+            "in": "formData",
+            "type": "string",
+            "required": true,
+            "description": "型号"
+          },
+          {
+            "name": "uploader",
+            "in": "formData",
+            "type": "string",
+            "required": false,
+            "description": "上传人"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "上传成功",
+            "schema": {
+              "$ref": "#/definitions/UploadDocumentResponse"
+            }
+          },
+          "400": {
+            "description": "参数错误",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "服务器内部错误",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/document/{id}": {
+      "get": {
+        "summary": "获取文档详情",
+        "description": "根据文档 ID 获取文档详细信息",
+        "tags": ["文档管理"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "integer",
+            "required": true,
+            "description": "文档 ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "文档详情",
+            "schema": {
+              "$ref": "#/definitions/DocumentDataResponse"
+            }
+          },
+          "400": {
+            "description": "无效的文档ID",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "文档不存在",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "删除文档",
+        "description": "根据文档 ID 删除文档及其关联的向量数据",
+        "tags": ["文档管理"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "type": "integer",
+            "required": true,
+            "description": "文档 ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "删除成功",
+            "schema": {
+              "$ref": "#/definitions/MessageResponse"
+            }
+          },
+          "400": {
+            "description": "无效的文档ID",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "删除失败",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/documents": {
+      "get": {
+        "summary": "文档列表",
+        "description": "分页查询文档列表，支持按品牌、型号筛选",
+        "tags": ["文档管理"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "brand",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "品牌名称"
+          },
+          {
+            "name": "model",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "型号"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "default": 1,
+            "description": "页码（默认 1）"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "default": 10,
+            "description": "每页条数（默认 10，最大 100）"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "文档列表",
+            "schema": {
+              "$ref": "#/definitions/DocumentListResponse"
+            }
+          },
+          "500": {
+            "description": "查询失败",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/qa": {
+      "post": {
+        "summary": "智能问答",
+        "description": "基于 RAG 的智能问答，根据上传的家电说明书内容回答用户问题。支持缓存加速。",
+        "tags": ["智能问答"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/QARequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "问答结果",
+            "schema": {
+              "$ref": "#/definitions/QAResponse"
+            }
+          },
+          "400": {
+            "description": "参数错误",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "查询失败",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/qa/error-code": {
+      "post": {
+        "summary": "故障代码查询",
+        "description": "根据故障代码查询故障原因和解决方案。优先查询本地数据库，未找到时降级走 RAG 检索。",
+        "tags": ["智能问答"],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "request",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ErrorCodeRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "故障代码查询结果",
+            "schema": {
+              "$ref": "#/definitions/ErrorCodeResponse"
+            }
+          },
+          "400": {
+            "description": "参数错误",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "查询失败",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 400 },
+        "message": { "type": "string", "example": "参数错误" }
+      }
+    },
+    "MessageResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "message": { "type": "string", "example": "操作成功" }
+      }
+    },
+    "Document": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "example": 1 },
+        "created_at": { "type": "string", "format": "date-time" },
+        "updated_at": { "type": "string", "format": "date-time" },
+        "filename": { "type": "string", "example": "说明书.pdf" },
+        "file_type": { "type": "string", "example": "pdf" },
+        "brand": { "type": "string", "example": "美的" },
+        "model": { "type": "string", "example": "KFR-35GW" },
+        "uploader": { "type": "string", "example": "admin" },
+        "upload_time": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "processing", "processed", "failed"], "example": "processed" },
+        "page_count": { "type": "integer", "example": 50 },
+        "slice_count": { "type": "integer", "example": 200 },
+        "file_size": { "type": "integer", "example": 1024000 },
+        "file_path": { "type": "string", "example": "./uploads/美的_KFR-35GW_说明书.pdf" },
+        "remark": { "type": "string" }
+      }
+    },
+    "UploadDocumentResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "message": { "type": "string", "example": "文档上传成功，正在后台处理" },
+        "data": { "$ref": "#/definitions/Document" }
+      }
+    },
+    "DocumentDataResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "data": { "$ref": "#/definitions/Document" }
+      }
+    },
+    "DocumentListResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "data": {
+          "type": "object",
+          "properties": {
+            "list": { "type": "array", "items": { "$ref": "#/definitions/Document" } },
+            "total": { "type": "integer", "example": 100 },
+            "page": { "type": "integer", "example": 1 },
+            "page_size": { "type": "integer", "example": 10 }
+          }
+        }
+      }
+    },
+    "QARequest": {
+      "type": "object",
+      "required": ["query"],
+      "properties": {
+        "query": { "type": "string", "example": "空调显示E1是什么意思？", "description": "用户问题" },
+        "model": { "type": "string", "example": "KFR-35GW", "description": "家电型号（可选，指定后优先检索该型号文档）" },
+        "brand": { "type": "string", "example": "美的", "description": "品牌名称（可选）" }
+      }
+    },
+    "QAResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "data": {
+          "type": "object",
+          "properties": {
+            "answer": { "type": "string", "example": "根据说明书，当空调显示E1故障代码时，通常表示室内温度传感器异常..." },
+            "sources": { "type": "array", "items": { "type": "string" }, "example": ["美的 KFR-35GW（第5页，故障排查）"] },
+            "images": { "type": "array", "items": { "type": "string" }, "example": ["http://minio:9000/screenshots/img1.jpg"] },
+            "cache_hit": { "type": "boolean", "example": false },
+            "duration": { "type": "integer", "example": 1200, "description": "响应耗时（毫秒）" }
+          }
+        }
+      }
+    },
+    "ErrorCodeRequest": {
+      "type": "object",
+      "required": ["code"],
+      "properties": {
+        "code": { "type": "string", "example": "E1", "description": "故障代码" },
+        "model": { "type": "string", "example": "KFR-35GW", "description": "家电型号（可选）" }
+      }
+    },
+    "ErrorCodeResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "data": {
+          "type": "object",
+          "properties": {
+            "code": { "type": "string", "example": "E1" },
+            "answer": { "type": "string", "example": "故障代码E1：室内温度传感器故障\n解决方案：检查传感器连接是否松动..." },
+            "sources": { "type": "array", "items": { "type": "string" }, "example": ["美的 KFR-35GW 故障代码表"] },
+            "images": { "type": "array", "items": { "type": "string" } },
+            "from_db": { "type": "boolean", "example": true, "description": "是否来自本地数据库" },
+            "from_rag": { "type": "boolean", "example": false, "description": "是否来自 RAG 检索" },
+            "duration": { "type": "integer", "example": 50, "description": "响应耗时（毫秒）" }
+          }
+        }
+      }
+    },
+    "HealthResponse": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "example": "healthy" },
+        "service": { "type": "string", "example": "smart-aftercare" }
+      }
+    },
+    "ReadinessResponse": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["ready", "degraded"], "example": "ready" },
+        "mysql": { "type": "string", "example": "healthy" },
+        "redis": { "type": "string", "example": "healthy" },
+        "milvus": { "type": "string", "example": "healthy" },
+        "milvus_stats": { "type": "object", "description": "Milvus 统计信息（仅 healthy 时存在）" }
+      }
+    },
+    "StatsResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "integer", "example": 200 },
+        "data": { "type": "object", "description": "文档统计数据" }
+      }
+    }
+  }
+}

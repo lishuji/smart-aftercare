@@ -29,7 +29,12 @@ func NewHealthHandler(
 }
 
 // Health 基础健康检查
-// GET /api/health
+// @Summary      健康检查
+// @Description  返回服务基础健康状态
+// @Tags         系统监控
+// @Produce      json
+// @Success      200  {object}  handler.HealthResponse  "服务健康"
+// @Router       /health [get]
 func (h *HealthHandler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "healthy",
@@ -38,7 +43,13 @@ func (h *HealthHandler) Health(c *gin.Context) {
 }
 
 // ReadinessCheck 就绪检查（检查所有依赖服务连接）
-// GET /api/health/ready
+// @Summary      就绪检查
+// @Description  检查所有依赖服务（MySQL、Redis、Milvus）的连接状态
+// @Tags         系统监控
+// @Produce      json
+// @Success      200  {object}  handler.ReadinessResponse  "所有服务就绪"
+// @Failure      503  {object}  handler.ReadinessResponse  "部分服务不可用"
+// @Router       /health/ready [get]
 func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 	ctx := context.Background()
 	status := gin.H{
@@ -82,7 +93,13 @@ func (h *HealthHandler) ReadinessCheck(c *gin.Context) {
 }
 
 // Stats 获取系统统计信息
-// GET /api/stats
+// @Summary      系统统计
+// @Description  获取文档数量、查询次数等系统统计信息
+// @Tags         系统监控
+// @Produce      json
+// @Success      200  {object}  handler.StatsResponse  "统计信息"
+// @Failure      500  {object}  handler.ErrorResponse  "获取统计信息失败"
+// @Router       /stats [get]
 func (h *HealthHandler) Stats(c *gin.Context) {
 	stats, err := h.mysqlRepo.GetDocumentStats()
 	if err != nil {

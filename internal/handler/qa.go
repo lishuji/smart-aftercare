@@ -35,7 +35,16 @@ type QARequest struct {
 }
 
 // QA 智能问答接口
-// POST /api/qa
+// @Summary      智能问答
+// @Description  基于 RAG 的智能问答，根据上传的家电说明书内容回答用户问题。支持缓存加速。
+// @Tags         智能问答
+// @Accept       json
+// @Produce      json
+// @Param        request  body      handler.QARequest      true  "问答请求"
+// @Success      200      {object}  handler.QAResponse     "问答结果"
+// @Failure      400      {object}  handler.ErrorResponse  "参数错误"
+// @Failure      500      {object}  handler.ErrorResponse  "查询失败"
+// @Router       /qa [post]
 func (h *QAHandler) QA(c *gin.Context) {
 	startTime := time.Now()
 
@@ -91,7 +100,16 @@ type ErrorCodeRequest struct {
 }
 
 // QueryErrorCode 故障代码查询接口
-// POST /api/qa/error-code
+// @Summary      故障代码查询
+// @Description  根据故障代码查询故障原因和解决方案。优先查询本地数据库，未找到时降级走 RAG 检索。
+// @Tags         智能问答
+// @Accept       json
+// @Produce      json
+// @Param        request  body      handler.ErrorCodeRequest      true  "故障代码查询请求"
+// @Success      200      {object}  handler.ErrorCodeResponse     "故障代码查询结果"
+// @Failure      400      {object}  handler.ErrorResponse         "参数错误"
+// @Failure      500      {object}  handler.ErrorResponse         "查询失败"
+// @Router       /qa/error-code [post]
 func (h *QAHandler) QueryErrorCode(c *gin.Context) {
 	startTime := time.Now()
 

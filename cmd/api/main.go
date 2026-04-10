@@ -2,6 +2,7 @@ package main
 
 import (
 	"smart-aftercare/config"
+	_ "smart-aftercare/docs"
 	"smart-aftercare/internal/handler"
 	"smart-aftercare/internal/repository"
 	"smart-aftercare/internal/router"
@@ -14,6 +15,20 @@ import (
 	"syscall"
 	"time"
 )
+
+// @title           智能售后服务系统 API
+// @version         1.0
+// @description     基于 RAG 的智能家电售后问答与文档管理系统。支持文档上传解析、智能问答、故障代码查询等功能。
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   Smart Aftercare Team
+// @contact.email  support@smart-aftercare.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8000
+// @BasePath  /api
 
 func main() {
 	// 1. 初始化日志
