@@ -37,6 +37,10 @@ func Setup(
 	// 设置上传文件大小限制（50MB）
 	r.MaxMultipartMemory = 50 << 20
 
+	// 静态文件：前端页面
+	r.StaticFile("/", "./web/index.html")
+	r.StaticFile("/index.html", "./web/index.html")
+
 	// Swagger 文档
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler,
 		ginSwagger.URL("/swagger/doc.json"),
