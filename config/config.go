@@ -105,6 +105,9 @@ func Load(configPaths ...string) (*Config, error) {
 	// 支持环境变量覆盖
 	v.AutomaticEnv()
 
+	// 绑定环境变量到嵌套配置项
+	bindEnvVars(v)
+
 	// 读取配置文件
 	if err := v.ReadInConfig(); err != nil {
 		return nil, fmt.Errorf("读取配置文件失败: %w", err)
@@ -119,6 +122,41 @@ func Load(configPaths ...string) (*Config, error) {
 	setDefaults(&cfg)
 
 	return &cfg, nil
+}
+
+// bindEnvVars 绑定环境变量到配置项
+func bindEnvVars(v *viper.Viper) {
+	// 豆包大模型配置
+	_ = v.BindEnv("doubao.api_key", "DOUBAO_API_KEY")
+	_ = v.BindEnv("doubao.embedding_model", "DOUBAO_EMBEDDING_MODEL")
+	_ = v.BindEnv("doubao.chat_model", "DOUBAO_CHAT_MODEL")
+	_ = v.BindEnv("doubao.temperature", "DOUBAO_TEMPERATURE")
+	_ = v.BindEnv("doubao.max_token", "DOUBAO_MAX_TOKEN")
+
+	// MySQL 配置
+	_ = v.BindEnv("mysql.host", "MYSQL_HOST")
+	_ = v.BindEnv("mysql.port", "MYSQL_PORT")
+	_ = v.BindEnv("mysql.user", "MYSQL_USER")
+	_ = v.BindEnv("mysql.password", "MYSQL_PASSWORD")
+	_ = v.BindEnv("mysql.db", "MYSQL_DB")
+
+	// Redis 配置
+	_ = v.BindEnv("redis.host", "REDIS_HOST")
+	_ = v.BindEnv("redis.port", "REDIS_PORT")
+	_ = v.BindEnv("redis.password", "REDIS_PASSWORD")
+
+	// Milvus 配置
+	_ = v.BindEnv("milvus.host", "MILVUS_HOST")
+	_ = v.BindEnv("milvus.port", "MILVUS_PORT")
+
+	// MinIO 配置
+	_ = v.BindEnv("minio.endpoint", "MINIO_ENDPOINT")
+	_ = v.BindEnv("minio.access_key", "MINIO_ACCESS_KEY")
+	_ = v.BindEnv("minio.secret_key", "MINIO_SECRET_KEY")
+	_ = v.BindEnv("minio.bucket", "MINIO_BUCKET")
+
+	// 服务配置
+	_ = v.BindEnv("server.port", "SERVER_PORT")
 }
 
 // setDefaults 设置默认值

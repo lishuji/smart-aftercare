@@ -34,8 +34,8 @@ minio:
   use_ssl: false
 
 doubao:
-  api_key: "your-doubao-api-key"
-  embedding_model: "embedding-v1"
-  chat_model: "doubao-pro"
+  api_key: "${DOUBAO_API_KEY}"
+  embedding_model: "${DOUBAO_EMBEDDING_MODEL}"
+  chat_model: "${DOUBAO_CHAT_MODEL}"
   temperature: 0.1
   max_token: 2048
