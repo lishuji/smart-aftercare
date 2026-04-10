@@ -1,0 +1,11 @@
+.env
+uploads/
+logs/
+mysql_data/
+milvus_data/
+milvus_minio_data/
+etcd_data/
+redis_data/
+minio_data/
+tmp/
+*.log

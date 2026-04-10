@@ -1,0 +1,41 @@
+server:
+  port: "8000"
+  read_timeout: 10s
+  write_timeout: 10s
+
+mysql:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: "123456"
+  db: "smart_aftercare"
+  max_open_conns: 20
+  max_idle_conns: 10
+  conn_max_lifetime: 30m
+
+milvus:
+  host: "localhost"
+  port: "19530"
+  collection_name: "appliance_knowledge"
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: ""
+  pool_size: 10
+  idle_timeout: 30m
+
+minio:
+  endpoint: "localhost:9000"
+  access_key: "minioadmin"
+  secret_key: "minioadmin"
+  bucket: "appliance-screenshots"
+  use_ssl: false
+
+doubao:
+  api_key: "your-doubao-api-key"
+  embedding_model: "embedding-v1"
+  chat_model: "doubao-pro"
+  temperature: 0.1
+  max_token: 2048

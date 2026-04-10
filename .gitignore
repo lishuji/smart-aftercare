@@ -1,0 +1,17 @@
+.env
+uploads/
+logs/
+*.log
+mysql_data/
+milvus_data/
+milvus_minio_data/
+etcd_data/
+redis_data/
+minio_data/
+tmp/
+.idea/
+.vscode/
+*.exe
+*.test
+*.out
+appliance-rag
